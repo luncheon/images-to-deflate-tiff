@@ -7,7 +7,7 @@ Generate a deflate-compressed tiff file from one or more images.
 ## Installation
 
 ```sh
-npm i luncheon/images-to-deflate-tiff
+npm i images-to-deflate-tiff
 ```
 
 ## Usage

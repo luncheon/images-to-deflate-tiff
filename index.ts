@@ -86,7 +86,7 @@ export async function imagesToTiffWithCompression(
         [273, 4, []], // StripOffsets
         [277, 3, [bitsPerSample.length]], // SamplesPerPixel,
         [278, 4, [sourceImage.height]], // RowsPerStrip
-        [279, 4, [sourceImage.width * sourceImage.height * bitsPerSample.length]], // StripByteCounts
+        [279, 4, [imageBuffer.byteLength]], // StripByteCounts
         [282, 5, [1, 1]], // XResolution
         [283, 5, [1, 1]], // YResolution
         [296, 3, [1]], // ResolutionUnit

@@ -15,7 +15,8 @@ npm i images-to-deflate-tiff
 ```ts
 import { imagesToDeflateTiff, imagesToZlibTiff, imagesToUncompressedTiff } from "images-to-deflate-tiff";
 
-const images = [document.querySelector("canvas").getContext("2d").getImageData(0, 0, canvas.width, canvas.height)];
+const canvas = document.querySelector("canvas");
+const images = [canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height)];
 
 // Compression: 1 (No compression)
 const uncompressedTiffArrayBuffer = await imagesToUncompressedTiff(images);

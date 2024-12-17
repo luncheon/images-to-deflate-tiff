@@ -16,7 +16,7 @@ const typeByteCounts = [0, 1, 1, 2, 4, 4, 1, 1, 2, 4, 4, 4, 8, 4] as const;
 
 function createIfdBuffer(
   tags: readonly [tagId: number, type: 3 | 4 | 5, values: readonly number[]][],
-  imageBuffer: ArrayBuffer,
+  imageBuffer: ArrayBufferLike,
   hasNext: boolean,
   offset: number,
   littleEndian: boolean,
@@ -60,7 +60,7 @@ export async function imagesToTiffWithCompression(
   images: ArrayLike<ImageData>,
   compress: (imageData: ImageData) => readonly [number, ArrayBufferLike] | Promise<readonly [number, ArrayBufferLike]>,
   options?: ImagesToTiffOptions,
-): Promise<Uint8Array> {
+): Promise<ArrayBuffer> {
   const littleEndian = options?.littleEndian ?? true;
   const stream = new TransformStream<Uint8Array, ArrayBuffer>();
   const arrayBuffer$ = new Response(stream.readable).arrayBuffer();
@@ -104,10 +104,10 @@ export async function imagesToTiffWithCompression(
   }
   await writer.close();
 
-  return new Uint8Array(await arrayBuffer$);
+  return arrayBuffer$;
 }
 
-async function compress(data: ArrayBufferLike, format: CompressionFormat): Promise<ArrayBufferLike> {
+async function compress(data: BufferSource, format: CompressionFormat): Promise<ArrayBufferLike> {
   const stream = new CompressionStream(format);
   const buffer$ = new Response(stream.readable).arrayBuffer();
   const writer = stream.writable.getWriter();
@@ -121,7 +121,7 @@ export const imagesToUncompressedTiff = (images: ArrayLike<ImageData>, options?:
   imagesToTiffWithCompression(images, image => [1, image.data.buffer], options);
 
 export const imagesToZlibTiff = (images: ArrayLike<ImageData>, options?: ImagesToTiffOptions): Promise<ArrayBuffer> =>
-  imagesToTiffWithCompression(images, async image => [8, await compress(image.data.buffer, "deflate")], options);
+  imagesToTiffWithCompression(images, async image => [8, await compress(image.data, "deflate")], options);
 
 export const imagesToDeflateTiff = (images: ArrayLike<ImageData>, options?: ImagesToTiffOptions): Promise<ArrayBuffer> =>
-  imagesToTiffWithCompression(images, async image => [32946, await compress(image.data.buffer, "deflate")], options);
+  imagesToTiffWithCompression(images, async image => [32946, await compress(image.data, "deflate")], options);

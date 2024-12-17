@@ -82,7 +82,7 @@ export async function imagesToTiffWithCompression(images, compress, options) {
         offset += ifdBuffer.byteLength + imageBuffer.byteLength;
     }
     await writer.close();
-    return new Uint8Array(await arrayBuffer$);
+    return arrayBuffer$;
 }
 async function compress(data, format) {
     const stream = new CompressionStream(format);
@@ -94,5 +94,5 @@ async function compress(data, format) {
     return buffer$;
 }
 export const imagesToUncompressedTiff = (images, options) => imagesToTiffWithCompression(images, image => [1, image.data.buffer], options);
-export const imagesToZlibTiff = (images, options) => imagesToTiffWithCompression(images, async (image) => [8, await compress(image.data.buffer, "deflate")], options);
-export const imagesToDeflateTiff = (images, options) => imagesToTiffWithCompression(images, async (image) => [32946, await compress(image.data.buffer, "deflate")], options);
+export const imagesToZlibTiff = (images, options) => imagesToTiffWithCompression(images, async (image) => [8, await compress(image.data, "deflate")], options);
+export const imagesToDeflateTiff = (images, options) => imagesToTiffWithCompression(images, async (image) => [32946, await compress(image.data, "deflate")], options);

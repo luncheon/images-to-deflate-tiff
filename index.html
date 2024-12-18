@@ -18,6 +18,7 @@
       label, button {
         all: unset;
         display: inline-flex;
+        vertical-align: middle;
         cursor: pointer;
         background: #46c1;
         padding: 4px 8px;
@@ -38,6 +39,7 @@
       <input hidden multiple type="file" accept=".apng,.avif,.bmp,.gif,.ico,.jpg,.jpeg,.jpe,.jif,.jfif,.png,.svg,.webp" style="cursor:pointer">
       Select one or more image files...
     </label>
+    <label><input id="alpha" type="checkbox">alpha</label>
     <hr>
     <table id="download-table"></table>
 
@@ -67,7 +69,10 @@
           button.type = "button";
           button.textContent = "↓" + compression;
           button.onclick = async () => {
-            const tiff = await imagesToTiff[compression](images);
+            const alpha = document.getElementById("alpha").checked;
+            const startedAt = Date.now();
+            const tiff = await imagesToTiff[compression](images, { alpha });
+            console.log({ compression, alpha }, "takes", Date.now() - startedAt, "[ms]");
             const a = document.createElement("a");
             a.href = URL.createObjectURL(new Blob([tiff], { type: "image/tiff" }));
             a.download = `${Array.from(files, f => f.name).join("+")}.${compression}.tiff`;

@@ -18,14 +18,23 @@ import { imagesToDeflateTiff, imagesToZlibTiff, imagesToUncompressedTiff } from 
 const canvas = document.querySelector("canvas");
 const images = [canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height)];
 
+// these option values are defaults.
+const options = {
+  littleEndian: true,
+  alpha: true,
+  xResolution: 72,
+  yResolution: 72,
+  resolutionUnit: 2, // 1 (unspecified) | 2 (inch) | 3 (cm)
+};
+
 // Compression: 1 (No compression)
-const uncompressedTiffArrayBuffer = await imagesToUncompressedTiff(images);
+const uncompressedTiffArrayBuffer = await imagesToUncompressedTiff(images, options);
 
 // Compression: 32946 (Deflate)
-const deflateTiffArrayBuffer = await imagesToDeflateTiff(images);
+const deflateTiffArrayBuffer = await imagesToDeflateTiff(images, options);
 
 // Compression: 8 (Zlib = Deflate)
-const zlibTiffArrayBuffer = await imagesToZlibTiff(images);
+const zlibTiffArrayBuffer = await imagesToZlibTiff(images, options);
 ```
 
 The argument is an array of `ImageData` (or object with `data`, `width`, `height` and `colorSpace: "srgb"` properties).

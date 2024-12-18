@@ -1,6 +1,6 @@
 {
   "name": "images-to-deflate-tiff",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate a deflate-compressed tiff file from one or more images.",
   "license": "WTFPL",
   "repository": "luncheon/images-to-deflate-tiff",

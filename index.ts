@@ -70,13 +70,11 @@ export async function imagesToTiffWithCompression(
   const xResolution = options?.xResolution ?? 72;
   const yResolution = options?.yResolution ?? 72;
   const resolutionUnit = options?.resolutionUnit ?? 2;
+  const bitsPerSample = alpha ? [8, 8, 8, 8] : [8, 8, 8];
 
-  const stream = new TransformStream<Uint8Array, ArrayBuffer>();
-  const arrayBuffer$ = new Response(stream.readable).arrayBuffer();
-  const writer = stream.writable.getWriter();
-  await writer.ready;
-  await writer.write(new Uint8Array(littleEndian ? [73, 73, 42, 0, 8, 0, 0, 0] : [77, 77, 0, 42, 0, 0, 0, 8]));
-  for (let i = 0, offset = 8; i < images.length; i++) {
+  const buffers: ArrayBufferLike[] = [];
+  let byteLength = 8;
+  for (let i = 0; i < images.length; i++) {
     const sourceImage = images[i];
     if (sourceImage.colorSpace !== "srgb") {
       throw new Error(`images-to-deflate-tiff: unsupported colorSpace: "${sourceImage.colorSpace}"`);
@@ -84,7 +82,6 @@ export async function imagesToTiffWithCompression(
     const [compressionTagValue, imageBuffer] = await compress(alpha ? sourceImage.data : sourceImage.data.filter((_, i) => i % 4 !== 3));
     const imageByteLength = imageBuffer.byteLength;
 
-    const bitsPerSample = alpha ? [8, 8, 8, 8] : [8, 8, 8];
     // see https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf p.24 Required Fields for RGB Images
     const ifdEntries: [tagId: number, type: 3 | 4 | 5, values: readonly number[]][] = [
       [256, 4, [sourceImage.width]], // ImageWidth
@@ -101,15 +98,21 @@ export async function imagesToTiffWithCompression(
       [296, 3, [resolutionUnit]], // ResolutionUnit
     ];
     alpha && ifdEntries.push([338, 3, [1]]); // ExtraSamples
-    const ifdBuffer = createIfdBuffer(ifdEntries, imageByteLength, i + 1 < images.length, offset, littleEndian);
+    const ifdBuffer = createIfdBuffer(ifdEntries, imageByteLength, i + 1 < images.length, byteLength, littleEndian);
 
-    await writer.write(new Uint8Array(ifdBuffer));
-    await writer.write(new Uint8Array(imageBuffer));
-    offset += ifdBuffer.byteLength + imageByteLength;
+    buffers.push(ifdBuffer);
+    buffers.push(imageBuffer);
+    byteLength += ifdBuffer.byteLength + imageByteLength;
   }
-  await writer.close();
 
-  return arrayBuffer$;
+  const concatenated = new Uint8Array(byteLength);
+  concatenated.set(littleEndian ? [73, 73, 42, 0, 8, 0, 0, 0] : [77, 77, 0, 42, 0, 0, 0, 8]);
+  let offset = 8;
+  for (const buffer of buffers) {
+    concatenated.set(new Uint8Array(buffer), offset);
+    offset += buffer.byteLength;
+  }
+  return concatenated.buffer;
 }
 
 async function compress(data: BufferSource, format: CompressionFormat): Promise<ArrayBufferLike> {
